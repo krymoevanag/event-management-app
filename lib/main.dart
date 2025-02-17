@@ -1,11 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 void main() {
-  runApp(EventApp());
+  runApp(const EventApp());
 }
 
-class EventApp extends StatelessWidget {
+class ProfileScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        'Profile Screen',
+        style: TextStyle(fontSize: 24),
+      ),
+    );
+  }
+}
+
+class EventApp extends StatefulWidget {
   const EventApp({super.key});
+
+  @override
+  _EventAppState createState() => _EventAppState();
+}
+
+class _EventAppState extends State<EventApp> {
+  bool isDarkMode = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadThemeMode();
+  }
+
+  void _loadThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isDarkMode = prefs.getBool('isDarkMode') ?? false;
+    });
+  }
+
+  void _toggleThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isDarkMode = !isDarkMode;
+      prefs.setBool('isDarkMode', isDarkMode);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,185 +62,15 @@ class EventApp extends StatelessWidget {
         brightness: Brightness.dark,
         primarySwatch: Colors.blue,
       ),
-      themeMode: ThemeMode.system,
-      home: EventListScreen(),
-    );
-  }
-}
-
-class EventListScreenOld extends StatefulWidget {
-  const EventListScreenOld({super.key});
-
-  @override
-  _EventListScreenOldState createState() => _EventListScreenOldState();
-}
-
-class _EventListScreenOldState extends State<EventListScreenOld> {
-  bool isDarkMode = false;
-
-  final List<Map<String, String>> events = [
-    {
-      'title': 'Tech Conference',
-      'date': 'March 10, 2025',
-      'image': 'https://source.unsplash.com/400x300/?conference'
-    },
-    {
-      'title': 'Music Festival',
-      'date': 'April 5, 2025',
-      'image': 'https://source.unsplash.com/400x300/?music'
-    },
-    {
-      'title': 'Startup Meetup',
-      'date': 'May 20, 2025',
-      'image': 'https://source.unsplash.com/400x300/?startup'
-    },
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Upcoming Events'),
-        actions: [
-          IconButton(
-            icon: Icon(isDarkMode ? Icons.dark_mode : Icons.light_mode),
-            onPressed: () {
-              setState(() {
-                isDarkMode = !isDarkMode;
-              });
-            },
-          ),
-        ],
-      ),
-      body: ListView.builder(
-        itemCount: events.length,
-        itemBuilder: (context, index) {
-          return Card(
-            margin: const EdgeInsets.all(10),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-            child: Column(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-                  child: Image.network(events[index]['image']!,
-                      height: 150, width: double.infinity, fit: BoxFit.cover),
-                ),
-                ListTile(
-                  title: Text(events[index]['title']!,
-                      style:
-                          const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  subtitle: Text(events[index]['date']!),
-                  trailing: ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              EventDetailScreen(event: events[index]),
-                        ),
-                      );
-                    },
-                    child: const Text('View'),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.event), label: "Events"),
-          BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: "Booked"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-        ],
-      ),
-    );
-  }
-}
-
-class EventDetailScreen extends StatelessWidget {
-  final Map<String, String> event;
-
-  const EventDetailScreen({super.key, required this.event});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(event['title']!)),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Image.network(event['image']!,
-                  height: 200, width: double.infinity, fit: BoxFit.cover),
-            ),
-            const SizedBox(height: 10),
-            Text(event['title']!,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            Text('Date: ${event['date']}', style: const TextStyle(fontSize: 18)),
-            const SizedBox(height: 20),
-            Center(
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                  textStyle: const TextStyle(fontSize: 18),
-                ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Ticket booked successfully!'),
-                  ));
-                },
-                child: const Text('Book Ticket'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
-      body: const Center(
-        child: Text(
-          'User Profile',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
-    );
-  }
-}
-
-class BookedEventsScreen extends StatelessWidget {
-  const BookedEventsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Booked Events')),
-      body: const Center(
-        child: Text(
-          'No booked events yet!',
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      home: EventListScreen(toggleTheme: _toggleThemeMode),
     );
   }
 }
 
 class EventListScreen extends StatefulWidget {
-  const EventListScreen({super.key});
+  final VoidCallback toggleTheme;
+  const EventListScreen({super.key, required this.toggleTheme});
 
   @override
   _EventListScreenState createState() => _EventListScreenState();
@@ -206,25 +78,75 @@ class EventListScreen extends StatefulWidget {
 
 class _EventListScreenState extends State<EventListScreen> {
   int _selectedIndex = 0;
-  bool isDarkMode = false;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
-  final List<Map<String, String>> events = [
+  List<Map<String, String>> events = [
     {
       'title': 'Tech Conference',
       'date': 'March 10, 2025',
-      'image': 'https://source.unsplash.com/400x300/?conference'
+      'image': 'assets/images/tech_conference.jpg'
     },
     {
       'title': 'Music Festival',
       'date': 'April 5, 2025',
-      'image': 'https://source.unsplash.com/400x300/?music'
+      'image': 'assets/images/music_festival.jpg'
     },
     {
       'title': 'Startup Meetup',
       'date': 'May 20, 2025',
-      'image': 'https://source.unsplash.com/400x300/?startup'
+      'image': 'assets/images/startup_meetup.jpg'
     },
   ];
+
+  List<Map<String, String>> _bookmarkedEvents = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBookmarkedEvents();
+  }
+
+  void _loadBookmarkedEvents() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedBookmarks = prefs.getString('bookmarkedEvents');
+    if (savedBookmarks != null) {
+      setState(() {
+        _bookmarkedEvents =
+            List<Map<String, String>>.from(json.decode(savedBookmarks));
+      });
+    }
+  }
+
+  void _toggleBookmark(Map<String, String> event) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      bool isBookmarked =
+          _bookmarkedEvents.any((e) => e['title'] == event['title']);
+      if (isBookmarked) {
+        _bookmarkedEvents.removeWhere((e) => e['title'] == event['title']);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Event removed from bookmarks!')),
+        );
+      } else {
+        _bookmarkedEvents.add(event);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Event added to bookmarks!')),
+        );
+      }
+      prefs.setString('bookmarkedEvents', json.encode(_bookmarkedEvents));
+    });
+  }
+
+  void _addEvent() {
+    setState(() {
+      events.add({
+        'title': 'New Event',
+        'date': 'June 15, 2025',
+        'image': 'assets/images/default_event.jpg'
+      });
+    });
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -236,25 +158,35 @@ class _EventListScreenState extends State<EventListScreen> {
   Widget build(BuildContext context) {
     List<Widget> screens = [
       _buildEventList(),
-      BookedEventsScreen(),
+      BookedEventsScreen(bookmarkedEvents: _bookmarkedEvents),
       ProfileScreen(),
     ];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Upcoming Events'),
+        title: TextField(
+          controller: _searchController,
+          decoration: const InputDecoration(
+            hintText: 'Search events...',
+            border: InputBorder.none,
+          ),
+          onChanged: (value) =>
+              setState(() => _searchQuery = value.toLowerCase()),
+        ),
         actions: [
           IconButton(
-            icon: Icon(isDarkMode ? Icons.dark_mode : Icons.light_mode),
-            onPressed: () {
-              setState(() {
-                isDarkMode = !isDarkMode;
-              });
-            },
+            icon: Icon(Theme.of(context).brightness == Brightness.dark
+                ? Icons.dark_mode
+                : Icons.light_mode),
+            onPressed: widget.toggleTheme,
           ),
         ],
       ),
       body: screens[_selectedIndex],
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addEvent,
+        child: const Icon(Icons.add),
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.event), label: "Events"),
@@ -268,38 +200,62 @@ class _EventListScreenState extends State<EventListScreen> {
   }
 
   Widget _buildEventList() {
+    final filteredEvents = events
+        .where((event) =>
+            event['title']!.toLowerCase().contains(_searchQuery) ||
+            event['date']!.toLowerCase().contains(_searchQuery))
+        .toList();
+
     return ListView.builder(
-      itemCount: events.length,
+      itemCount: filteredEvents.length,
       itemBuilder: (context, index) {
         return Card(
-          margin: const EdgeInsets.all(10),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           child: Column(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-                child: Image.network(events[index]['image']!,
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(15)),
+                child: Image.asset(filteredEvents[index]['image']!,
                     height: 150, width: double.infinity, fit: BoxFit.cover),
               ),
               ListTile(
-                title: Text(events[index]['title']!,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                subtitle: Text(events[index]['date']!),
-                trailing: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            EventDetailScreen(event: events[index]),
-                      ),
-                    );
-                  },
-                  child: const Text('View'),
+                title: Text(filteredEvents[index]['title']!,
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold)),
+                subtitle: Text(filteredEvents[index]['date']!),
+                trailing: IconButton(
+                  icon: Icon(
+                    _bookmarkedEvents.any(
+                            (e) => e['title'] == filteredEvents[index]['title'])
+                        ? Icons.bookmark
+                        : Icons.bookmark_border,
+                  ),
+                  onPressed: () => _toggleBookmark(filteredEvents[index]),
                 ),
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+}
+
+class BookedEventsScreen extends StatelessWidget {
+  final List<Map<String, String>> bookmarkedEvents;
+
+  const BookedEventsScreen({super.key, required this.bookmarkedEvents});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: bookmarkedEvents.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(bookmarkedEvents[index]['title']!),
+          subtitle: Text(bookmarkedEvents[index]['date']!),
         );
       },
     );
